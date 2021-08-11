@@ -47,19 +47,12 @@ import java.awt.event.*;
 public class Sigma_Filter implements ExtendedPlugInFilter, DialogListener {
     // Filter parameters
     private static double radius = 2.;          // The kernel radius, see Process>Filters>Show Circular Masks
-//    private static double sigmaWidth = 2.;      // Pixel value range in sigmas.
-//    private static double minPixFraction = 0.2; // The fraction of pixels that need to be inside the range for selective smoothing
     private static boolean outlierAware = true; // Whether outliers will be excluded from averaging
 
     // My sigma filter
     private static double noise_level = 0.008;
     private static double sigma = 0.5;
     private static double denoise_strength = 0.5;
-//    private static int height = 0;
-//    private static int width = 0;
-//    private static float pixel0 = 0;
-//    private static int roix = 0;
-//    private static int roiy = 0;
 
     // F u r t h e r   c l a s s   v a r i a b l e s
     int flags = DOES_ALL|SUPPORTS_MASKING|CONVERT_TO_FLOAT|SNAPSHOT|KEEP_PREVIEW|
@@ -98,8 +91,6 @@ public class Sigma_Filter implements ExtendedPlugInFilter, DialogListener {
 
     public boolean dialogItemChanged(GenericDialog gd, AWTEvent e) {
         radius = gd.getNextNumber();
-//        sigmaWidth = gd.getNextNumber();
-//        minPixFraction = gd.getNextNumber();
         sigma = gd.getNextNumber();
         noise_level = gd.getNextNumber();
         denoise_strength = gd.getNextNumber();
@@ -113,12 +104,11 @@ public class Sigma_Filter implements ExtendedPlugInFilter, DialogListener {
     public void run(ImageProcessor ip) {
         //copy class variables to local ones - this is necessary for preview
         int[] lineRadius;
-        int kRadius, kNPoints, minPixNumber;
+        int kRadius, kNPoints;
         synchronized(this) {                            //the two following items must be consistent
             lineRadius = (int[])(this.lineRadius.clone()); //cloning also required by doFiltering method
             kRadius = this.kRadius;                     //kernel radius
             kNPoints = this.kNPoints;                   //number of pixels in the kernel
-//            minPixNumber = (int)(kNPoints * minPixFraction + 0.999999); //min pixels in sigma range
         }
         if (Thread.currentThread().isInterrupted()) return;
         pass++;
@@ -192,27 +182,11 @@ public class Sigma_Filter implements ExtendedPlugInFilter, DialogListener {
             boolean fullCalculation = true;         // F I L T E R   the line
             for (int x=roi.x, p=x+y*width, xCache0=kRadius;  x<xEnd; x++, p++, xCache0++) {
                 double value = pixels[p];           //the current pixel
-//                if (fullCalculation) {
-//                    fullCalculation = smallKernel;  //for small kernel, always use the full area, not incremental algorithm
-//                    getAreaSums(cache, cacheWidth, xCache0, lineRadius, kSize, sums);
-//                } else
-//                    addSideSums(cache, cacheWidth, xCache0, lineRadius, kSize, sums);
-//                double mean = sums[0]/kNPoints;     //sum[0] is the sum over the pixels, sum[1] the sum over the squares
-//                double variance = sums[1]/kNPoints - mean*mean;
-//
-//                double sigmaRange  = sigmaWidth*Math.sqrt(variance);
-//                double sigmaBottom = value - sigmaRange;
-//                double sigmaTop = value + sigmaRange;
-
                 double sum = 0;
                 int count = 0;
                 for (int y1=0; y1<kSize; y1++) {                // for y1 within the cache stripe
                     for (int x1=xCache0-lineRadius[y1], iCache1=y1*cacheWidth+x1; x1<=xCache0+lineRadius[y1]; x1++, iCache1++) {
                         float v = cache[iCache1];                // a point within the kernel
-//                        if ((v>=sigmaBottom)&&(v<=sigmaTop)) {
-//                            sum += v;
-//                            count++;
-//                        }
                         double diff = Math.abs(v-value);
                         if (diff < thr1[iCache1]) {
                             sum += v;
