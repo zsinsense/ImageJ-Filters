@@ -194,8 +194,7 @@ public class Sigma_Filter implements ExtendedPlugInFilter, DialogListener {
                         }
                     }
                 }
-                //if there are too few pixels in the kernel that are within sigma range, the
-                //mean of the entire kernel is taken.
+
                 if (count != 0){
                     pixels[p] = pixels[p] * (float)(1-denoise_strength) + (float)denoise_strength * (float)(sum/count);
                 }
